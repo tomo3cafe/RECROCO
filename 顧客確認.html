@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>申込内容のご確認｜株式会社リクロコ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
+  :root {
+    --bg: #f5f4f0; --surface: #fff; --border: #ddd9d0;
+    --accent: #1a3a5c; --accent2: #c8832a; --text: #1c1c1c;
+    --muted: #888; --danger: #c0392b; --success: #27ae60;
+    --input-bg: #fafaf8; --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --readonly-bg: #f0ede8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans JP', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 32px 16px; }
+
+  .app-header { max-width: 800px; margin: 0 auto 32px; text-align: center; border-bottom: 2px solid var(--accent); padding-bottom: 20px; }
+  .app-header .logo { font-size: 0.78rem; color: var(--muted); font-family: 'DM Mono', monospace; margin-bottom: 8px; }
+  .app-header h1 { font-size: 1.4rem; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; }
+  .app-header .desc { font-size: 0.82rem; color: var(--muted); margin-top: 8px; line-height: 1.7; }
+
+  .container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+
+  .card { background: var(--surface); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; }
+  .card-header { background: var(--accent); color: white; padding: 14px 24px; display: flex; align-items: center; gap: 10px; }
+  .card-header .step { width: 26px; height: 26px; background: var(--accent2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; font-family: 'DM Mono', monospace; flex-shrink: 0; }
+  .card-header h2 { font-size: 0.95rem; font-weight: 500; letter-spacing: 0.05em; }
+  .card-header .readonly-badge { margin-left: auto; background: rgba(255,255,255,0.2); font-size: 0.7rem; padding: 2px 10px; border-radius: 20px; }
+  .card-body { padding: 24px; }
+
+  /* 読み取り専用：契約内容テーブル */
+  .contract-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .contract-table th { background: var(--readonly-bg); padding: 10px 14px; text-align: left; font-weight: 600; color: var(--accent); font-size: 0.78rem; border-bottom: 2px solid var(--border); }
+  .contract-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .contract-table tr:last-child td { border-bottom: none; }
+  .contract-table .price-cell { font-family: 'DM Mono', monospace; font-weight: 500; text-align: right; }
+
+  .total-area { background: var(--readonly-bg); border-radius: 10px; padding: 16px 20px; display: flex; justify-content: flex-end; gap: 32px; margin-top: 12px; }
+  .total-item { text-align: right; }
+  .total-item .t-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; }
+  .total-item .amount { font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+  .total-item.tax .amount { font-size: 1.3rem; color: var(--accent2); }
+
+  /* 顧客入力フォーム */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group.third { grid-column: span 1; }
+
+  label { font-size: 0.78rem; font-weight: 500; color: var(--accent); letter-spacing: 0.03em; }
+  label .req { color: var(--danger); margin-left: 2px; }
+  label .opt { color: var(--muted); font-weight: 400; font-size: 0.72rem; margin-left: 4px; }
+
+  input[type="text"], input[type="email"], input[type="tel"], select {
+    background: var(--input-bg); border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 10px 14px; font-size: 0.9rem; font-family: 'Noto Sans JP', sans-serif;
+    color: var(--text); transition: border-color 0.2s, box-shadow 0.2s; width: 100%;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,58,92,0.1); }
+
+  /* 郵便番号行 */
+  .postal-row { display: flex; gap: 10px; align-items: flex-end; }
+  .postal-row input { flex: 0 0 160px; }
+  .postal-btn { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 10px 16px; cursor: pointer; font-size: 0.82rem; font-family: 'Noto Sans JP', sans-serif; white-space: nowrap; transition: background 0.2s; flex-shrink: 0; }
+  .postal-btn:hover { background: #142d48; }
+  .postal-hint { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+
+  /* チェック編 */
+  .checklist { display: flex; flex-direction: column; gap: 8px; }
+  .check-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; background: var(--input-bg); border-radius: 8px; border: 1.5px solid var(--border); cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+  .check-item:has(input:checked) { background: #f0f7ff; border-color: var(--accent); }
+  .check-item input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--accent); flex-shrink: 0; margin-top: 3px; cursor: pointer; }
+  .check-item span { font-size: 0.8rem; line-height: 1.6; }
+
+  /* 同意ボタン */
+  .agree-area { background: #fff8f0; border: 2px solid var(--accent2); border-radius: 12px; padding: 24px; text-align: center; }
+  .agree-area p { font-size: 0.85rem; color: var(--text); margin-bottom: 16px; line-height: 1.8; }
+  .agree-area .final-check { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; cursor: pointer; }
+  .agree-area .final-check input { width: 20px; height: 20px; accent-color: var(--accent2); cursor: pointer; }
+  .agree-area .final-check span { font-size: 0.9rem; font-weight: 500; }
+
+  .action-area { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn { padding: 14px 32px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; border: none; transition: all 0.2s; letter-spacing: 0.04em; display: flex; align-items: center; gap: 8px; }
+  .btn-primary { background: var(--accent2); color: white; box-shadow: 0 4px 14px rgba(200,131,42,0.3); }
+  .btn-primary:hover { background: #b0731e; transform: translateY(-1px); }
+  .btn-primary:disabled { background: #ccc; box-shadow: none; transform: none; cursor: not-allowed; }
+  .btn-secondary { background: white; color: var(--accent); border: 2px solid var(--accent); }
+
+  /* 完了画面 */
+  .complete-view { display: none; text-align: center; padding: 48px 24px; }
+  .complete-view.active { display: block; }
+  .complete-icon { font-size: 4rem; margin-bottom: 16px; }
+  .complete-view h2 { font-size: 1.3rem; color: var(--accent); margin-bottom: 12px; }
+  .complete-view p { font-size: 0.85rem; color: var(--muted); line-height: 1.8; }
+
+  /* エラー */
+  .error-view { text-align: center; padding: 60px 24px; }
+  .error-view h2 { font-size: 1.1rem; color: var(--danger); margin-bottom: 12px; }
+  .error-view p { font-size: 0.85rem; color: var(--muted); }
+
+  /* プレビュー用（印刷） */
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { background: white !important; padding: 0 !important; font-size: 11pt; }
+    .no-print { display: none !important; }
+    .container { max-width: 100% !important; gap: 0 !important; }
+    .card { box-shadow: none !important; border-radius: 0 !important; border: none !important; margin-bottom: 0 !important; page-break-inside: avoid; }
+    .card-header { background: #1a3a5c !important; color: white !important; padding: 8px 16px !important; border-radius: 0 !important; }
+    .card-body { padding: 12px 16px !important; }
+    .app-header { border-bottom: 2px solid #1a3a5c !important; padding-bottom: 12px !important; margin-bottom: 16px !important; }
+    .app-header .logo { color: #666 !important; }
+    .app-header h1 { font-size: 1.1rem !important; }
+    .app-header .desc { display: none; }
+    /* 申込書印刷レイアウト */
+    .print-doc { display: block !important; }
+    .print-hide { display: none !important; }
+    .contract-table th, .contract-table td { padding: 6px 10px !important; font-size: 9pt !important; }
+    .total-area { padding: 10px 16px !important; border-radius: 0 !important; }
+    /* 顧客情報テーブル印刷用 */
+    .customer-print-table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-bottom: 8px; }
+    .customer-print-table th { background: #f0ede8 !important; border: 1px solid #aaa; padding: 6px 10px; font-weight: 600; width: 30%; text-align: left; }
+    .customer-print-table td { border: 1px solid #aaa; padding: 6px 10px; }
+    /* チェックリスト印刷 */
+    .check-item { padding: 4px 8px !important; border: none !important; background: none !important; break-inside: avoid; }
+    .check-item span { font-size: 8.5pt !important; }
+    /* 押印欄 */
+    .seal-area { display: flex !important; justify-content: flex-end; margin-top: 16px; gap: 24px; }
+    .seal-box { border: 1px solid #aaa; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 8pt; color: #666; flex-direction: column; gap: 4px; }
+    /* 署名欄 */
+    .sign-table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 12px; }
+    .sign-table th, .sign-table td { border: 1px solid #aaa; padding: 8px 12px; }
+    .sign-table th { background: #f0ede8 !important; font-weight: 600; width: 25%; }
+  }
+  .print-doc { display: none; }
+  .customer-print-table { display: none; }
+  .seal-area { display: none; }
+  .sign-table { display: none; }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .postal-row { flex-wrap: wrap; }
+    .postal-row input { flex: 1; min-width: 120px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="logo">株式会社リクロコ</div>
+  <h1>お申込内容のご確認</h1>
+  <p class="desc">
+    下記の申込内容をご確認いただき、貴社情報をご入力の上、お申込みを完了してください。<br>
+    ご不明な点はご担当者までお問い合わせください。
+  </p>
+</header>
+
+<div class="container" id="mainContent">
+  <div class="error-view" id="errorView" style="display:none;">
+    <h2>⚠️ データを読み込めませんでした</h2>
+    <p>リンクが正しくないか、有効期限が切れている可能性があります。<br>担当者にご連絡ください。</p>
+  </div>
+</div>
+
+<!-- 完了画面 -->
+<div class="container" id="completeView" style="display:none;">
+  <div class="card no-print">
+    <div class="card-body">
+      <div class="complete-view active">
+        <div class="complete-icon">✅</div>
+        <h2>お申込みありがとうございます</h2>
+        <p>
+          申込内容を受け付けました。<br>
+          担当者より改めてご連絡いたします。
+        </p>
+        <div style="margin-top:28px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="printPDF()" style="background:#1a3a5c;box-shadow:0 4px 14px rgba(26,58,92,0.3);">
+            📄 申込書をPDFで保存
+          </button>
+        </div>
+        <p style="font-size:0.75rem;color:var(--muted);margin-top:12px;">
+          ※ ブラウザの印刷ダイアログが開きます。「PDFとして保存」を選択してください。
+        </p>
+      </div>
+    </div>
+  </div>
+  <!-- 印刷用申込書（画面には非表示・印刷時のみ表示） -->
+  <div id="printDoc" class="print-doc"></div>
+</div>
+
+<script>
+let formData = null;
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const [yyyy, mm, dd] = dateStr.split('-');
+  return `${yyyy}年${parseInt(mm)}月${parseInt(dd)}日`;
+}
+
+function formatPrice(val) {
+  const n = parseInt(String(val).replace(/,/g,'')) || 0;
+  return n.toLocaleString();
+}
+
+// テスト用ダミーデータ
+const DEMO_DATA = {
+  app_date: '2026-03-13',
+  staff_name: '山崎',
+  creator_name: '田中',
+  client_name: 'セイフラインズ株式会社',
+  referral_company: '株式会社サンプル商事',
+  services: [
+    { service: 'indeed', plan: '運用管理 12ヶ月プラン（春日井）', period: '12ヶ月', price: '135000' },
+    { service: 'indeed', plan: '運用管理 12ヶ月プラン（小牧）', period: '12ヶ月', price: '135000' },
+    { service: 'indeed', plan: '運用管理代行 初期設定', period: '—', price: '50000' },
+    { service: 'indeedPLUS', plan: 'チャージ料', period: '—', price: '150000' },
+    { service: 'indeedPLUS', plan: '広告宣伝費（有料枠チャージの20%）', period: '—', price: '30000' },
+  ],
+  checks: [
+    '請求は掲載開始月の月末締で発行／お支払いは翌月末払い（振込）でお願いします。',
+    '請求書は上記の請求先メールアドレス宛に送付します。',
+    '振込手数料はお客様負担にてお願いします。',
+    'Indeed PLUSチャージ料につきましては【株式会社ONE（オーエヌイー）】より、チャージ利用月の"月末締め、翌月末支払い"で弊社からの請求とは別になりますので、あらかじめご了承ください。',
+    'IndeedPLUSチャージ料ご利用時の運用期間は、応募状況に応じて設定額や期間の変更を提案する場合もあります。',
+    '応募者情報は個人情報として適切に管理し、採用選考の目的でのみクライアントと共有されることに同意します。',
+    '求人内容・労働条件・掲載情報については申込企業の責任において正確な情報を提供することに同意します。',
+    '求人媒体の掲載審査・掲載可否・表示順位等は各媒体の規定に基づき決定されることを理解します。',
+    '求人媒体の規約変更やポリシー変更により掲載内容の修正・停止が行われる場合があることに同意します。',
+    '応募者との採用選考・面接・雇用契約等は申込企業の責任において行うことに同意します。',
+    'ご利用料金の振込遅延が続く場合、取引停止または前入金制による対応とさせていただく場合もあります。',
+    '申込書の受領後、アカウント申請および原稿作成等を進めてまいります。アカウント申請、原稿作成・承認後に掲載を取りやめる場合は、初期設定費55,000円（税込）のみ頂戴いたしますのでご了承ください。',
+    '弊社にて運用管理するindeedアカウントは、契約終了後もお渡しいたしかねますのでご了承ください。',
+    'indeed運用管理代行サービスの契約は『自動更新』です。継続されない場合はその旨ご連絡をお願いします。',
+  ],
+  total_ex: 500000,
+  total_in: 550000,
+};
+
+// URLパラメータからデータ取得
+function loadData() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get('d');
+    if (!encoded) {
+      // URLパラメータがない場合はデモデータで表示
+      formData = DEMO_DATA;
+      showDemoBanner();
+      renderPage();
+      return;
+    }
+    formData = JSON.parse(decodeURIComponent(atob(encoded)));
+    renderPage();
+  } catch(e) {
+    // デコード失敗時もデモデータで表示
+    formData = DEMO_DATA;
+    showDemoBanner();
+    renderPage();
+  }
+}
+
+function showDemoBanner() {
+  const banner = document.createElement('div');
+  banner.style.cssText = 'background:#fff3cd;border:1.5px solid #f0ad4e;border-radius:10px;padding:12px 20px;text-align:center;font-size:0.82rem;color:#856404;margin-bottom:8px;';
+  banner.innerHTML = '🔧 <strong>プレビューモード</strong>：テスト用のサンプルデータを表示しています。実際の顧客には作成ツールで生成したリンクを送付してください。';
+  document.getElementById('mainContent').prepend(banner);
+}
+
+function renderPage() {
+  const d = formData;
+  const main = document.getElementById('mainContent');
+
+  const serviceRows = d.services.map(s => `
+    <tr>
+      <td>${s.service}</td>
+      <td>${s.plan}</td>
+      <td style="text-align:center;">${s.period || '—'}</td>
+      <td class="price-cell">¥${formatPrice(s.price)}</td>
+      <td style="font-size:.78rem;color:#555;">${s.note || ''}</td>
+    </tr>
+  `).join('');
+
+  const checkItems = d.checks.map(c => `
+    <label class="check-item">
+      <input type="checkbox" class="confirm-check">
+      <span>${c}</span>
+    </label>
+  `).join('');
+
+  main.innerHTML = `
+    <!-- クライアント名 -->
+    ${d.client_name ? `
+    <div style="text-align:center;padding:12px 0 4px;">
+      <span style="font-size:1.4rem;font-weight:700;color:var(--accent);letter-spacing:.06em;">${d.client_name}　御中</span>
+    </div>
+    ` : ''}
+
+    <!-- 申込概要 -->
+    <div class="card no-print" style="background:#eaf4ff;border:1.5px solid #4a90d9;">
+      <div class="card-body" style="padding:16px 24px;">
+        <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:0.82rem;">
+          <div><span style="color:var(--muted);">申込書作成日：</span><strong>${formatDate(d.app_date)}</strong></div>
+          <div><span style="color:var(--muted);">営業担当：</span><strong>${d.staff_name}</strong></div>
+          ${d.creator_name ? `<div><span style="color:var(--muted);">申込書作成者：</span><strong>${d.creator_name}</strong></div>` : ''}
+          <div><span style="color:var(--muted);">紹介者：</span><strong>${d.referral_company}</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 契約内容（読み取り専用） -->
+    <div class="card">
+      <div class="card-header">
+        <div class="step">1</div>
+        <h2>ご契約内容</h2>
+        <span class="readonly-badge">確認のみ</span>
+      </div>
+      <div class="card-body">
+        <table class="contract-table">
+          <thead>
+            <tr>
+              <th>サービス名</th>
+              <th>内容・プラン</th>
+              <th style="text-align:center;">数量・期間</th>
+              <th style="text-align:right;">金額（税抜）</th>
+              <th>備考</th>
+            </tr>
+          </thead>
+          <tbody>${serviceRows}</tbody>
+        </table>
+        <div class="total-area">
+          <div class="total-item">
+            <div class="t-label">合計（税抜）</div>
+            <div class="amount">¥${formatPrice(d.total_ex)}</div>
+          </div>
+          <div class="total-item tax">
+            <div class="t-label">合計（税込）</div>
+            <div class="amount">¥${formatPrice(d.total_in)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 顧客情報入力 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="step">2</div>
+        <h2>貴社情報のご入力</h2>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>会社名 <span class="req">*</span></label>
+            <input type="text" id="c_company" placeholder="例：〇〇株式会社">
+          </div>
+          <div class="form-group full">
+            <label>郵便番号 <span class="req">*</span></label>
+            <div class="postal-row">
+              <input type="text" id="c_postal" placeholder="例：000-0000" maxlength="8"
+                inputmode="numeric" pattern="[0-9\-]*"
+                oninput="formatPostal(this)" style="ime-mode:disabled;">
+              <button class="postal-btn" onclick="lookupPostal()">住所を自動入力</button>
+            </div>
+            <div class="postal-hint">※ 半角数字で入力してください（例：4510045 または 451-0045）</div>
+          </div>
+          <div class="form-group full">
+            <label>住所（都道府県〜番地） <span class="req">*</span></label>
+            <input type="text" id="c_address" placeholder="例：〇〇県〇〇市〇〇町0丁目0番0号">
+          </div>
+          <div class="form-group full">
+            <label>建物名・階数 <span class="opt">任意</span></label>
+            <input type="text" id="c_building" placeholder="例：〇〇ビル0F">
+          </div>
+          <div class="form-group">
+            <label>代表者名 <span class="req">*</span></label>
+            <input type="text" id="c_rep" placeholder="例：代表取締役 〇〇 〇〇">
+          </div>
+          <div class="form-group">
+            <label>代表電話番号 <span class="req">*</span></label>
+            <input type="tel" id="c_tel" placeholder="例：000-000-0000">
+          </div>
+          <div class="form-group">
+            <label>担当部署 <span class="opt">任意</span></label>
+            <input type="text" id="c_dept" placeholder="例：〇〇部">
+          </div>
+          <div class="form-group">
+            <label>ご担当者名 <span class="req">*</span></label>
+            <input type="text" id="c_contact" placeholder="例：〇〇 〇〇">
+          </div>
+          <div class="form-group full">
+            <label>請求先メールアドレス <span class="req">*</span></label>
+            <input type="email" id="c_email" placeholder="例：info@example.co.jp">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- チェック編 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="step">3</div>
+        <h2>確認事項</h2>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <p style="font-size:0.82rem;color:var(--muted);">以下の項目をすべてご確認いただき、チェックを入れてください。</p>
+          <button type="button" onclick="checkAllConfirm()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:.78rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;font-weight:500;white-space:nowrap;">✅ すべてチェック</button>
+        </div>
+        <div class="checklist">${checkItems}</div>
+      </div>
+    </div>
+
+    <!-- 同意・送信 -->
+    <div class="card">
+      <div class="card-body">
+        <div class="agree-area">
+          <p>上記の契約内容・確認事項をすべてご確認いただきましたか？<br>お申込みを確定すると、担当者に内容が送信されます。</p>
+          <label class="final-check">
+            <input type="checkbox" id="finalAgree" onchange="toggleSubmit()">
+            <span>上記内容に同意し、申込を確定します</span>
+          </label>
+          <div class="action-area">
+            <button class="btn btn-primary" id="submitBtn" onclick="submitForm()" disabled>
+              ✅ 申込を確定する
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// 郵便番号フォーマット（半角数字のみ・自動ハイフン挿入）
+function formatPostal(input) {
+  // 数字以外を除去
+  let v = input.value.replace(/[^0-9]/g, '');
+  // 4桁以上でハイフン自動挿入
+  if (v.length > 3) v = v.slice(0,3) + '-' + v.slice(3,7);
+  input.value = v;
+}
+
+// 郵便番号→住所自動補完（zipcloud API）
+async function lookupPostal() {
+  const postal = document.getElementById('c_postal').value.replace(/-/g,'');
+  if (postal.length !== 7) { alert('7桁の郵便番号を入力してください。'); return; }
+  try {
+    const res = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${postal}`);
+    const json = await res.json();
+    if (json.results && json.results.length > 0) {
+      const r = json.results[0];
+      const addr = r.address1 + r.address2 + r.address3;
+      document.getElementById('c_address').value = addr;
+      document.getElementById('c_building').focus();
+    } else {
+      alert('住所が見つかりませんでした。手動で入力してください。');
+    }
+  } catch(e) {
+    alert('住所の自動取得に失敗しました。手動で入力してください。');
+  }
+}
+
+function checkAllConfirm() {
+  document.querySelectorAll('.confirm-check').forEach(cb => { cb.checked = true; });
+  toggleSubmit();
+}
+
+function toggleSubmit() {
+  const checks = document.querySelectorAll('.confirm-check');
+  const allChecked = [...checks].every(c => c.checked);
+  const finalAgree = document.getElementById('finalAgree').checked;
+  document.getElementById('submitBtn').disabled = !(allChecked && finalAgree);
+}
+
+// チェック変更監視
+document.addEventListener('change', e => {
+  if (e.target.classList.contains('confirm-check') || e.target.id === 'finalAgree') {
+    toggleSubmit();
+  }
+});
+
+function submitForm() {
+  const required = [
+    { id: 'c_company', label: '会社名' },
+    { id: 'c_postal', label: '郵便番号' },
+    { id: 'c_address', label: '住所' },
+    { id: 'c_rep', label: '代表者名' },
+    { id: 'c_tel', label: '代表電話番号' },
+    { id: 'c_contact', label: 'ご担当者名' },
+    { id: 'c_email', label: '請求先メールアドレス' },
+  ];
+  for (const f of required) {
+    if (!document.getElementById(f.id)?.value.trim()) {
+      alert(`「${f.label}」を入力してください。`);
+      document.getElementById(f.id)?.focus();
+      return;
+    }
+  }
+
+  // 顧客入力データを保存
+  const d = formData;
+  d.customer = {
+    company:  document.getElementById('c_company').value.trim(),
+    postal:   document.getElementById('c_postal').value.trim(),
+    address:  document.getElementById('c_address').value.trim(),
+    building: document.getElementById('c_building').value.trim(),
+    rep:      document.getElementById('c_rep').value.trim(),
+    tel:      document.getElementById('c_tel').value.trim(),
+    dept:     document.getElementById('c_dept').value.trim(),
+    contact:  document.getElementById('c_contact').value.trim(),
+    email:    document.getElementById('c_email').value.trim(),
+  };
+
+  // 印刷用申込書を生成
+  buildPrintDoc(d);
+
+  // GASへデータ送信（GAS_URLを設定した場合のみ）
+  sendToGAS(d);
+
+  document.getElementById('mainContent').style.display = 'none';
+  document.getElementById('completeView').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// GAS WebアプリURL（設定後ここに貼り付け）
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrcKueQQ7NvZ2L1QgXo9TdNimAnz0e-Q3WdMfXeyasR8RtzkyoIixG83dLym2bsgsM/exec';  // 例: 'https://script.google.com/macros/s/XXXXXX/exec'
+
+async function sendToGAS(data) {
+  if (!GAS_URL) return;
+  // 承認日時・ブラウザ情報を付加
+  data.approved_at = new Date().toLocaleString('ja-JP', {timeZone:'Asia/Tokyo'});
+  data.browser_info = navigator.userAgent;
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  } catch(e) {
+    console.error('GAS送信エラー:', e);
+  }
+}
+
+function buildPrintDoc(d) {
+  const c = d.customer;
+
+  // 承認日時・ブラウザ情報
+  const now = new Date();
+  const approvedAt = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  const browserInfo = navigator.userAgent;
+
+  // サービス行：行ごとに背景色を交互に
+  const serviceRows = d.services.map((s, i) => `
+    <tr style="background:${i % 2 === 0 ? '#fff' : '#f8f7f4'};">
+      <td style="padding:8px 10px;border:1px solid #ddd;">${s.service}</td>
+      <td style="padding:8px 10px;border:1px solid #ddd;">${s.plan}</td>
+      <td style="padding:8px 10px;border:1px solid #ddd;text-align:center;">${s.period || '—'}</td>
+      <td style="padding:8px 10px;border:1px solid #ddd;text-align:right;font-weight:600;">¥${formatPrice(s.price)}</td>
+      <td style="padding:8px 10px;border:1px solid #ddd;font-size:8pt;color:#555;">${s.note || ''}</td>
+    </tr>
+  `).join('');
+
+  // 確認事項：2カラムレイアウトでコンパクトに
+  const checkList = d.checks;
+  const half = Math.ceil(checkList.length / 2);
+  const col1 = checkList.slice(0, half);
+  const col2 = checkList.slice(half);
+  const maxRows = Math.max(col1.length, col2.length);
+  const checkRows = Array.from({length: maxRows}, (_, i) => `
+    <tr>
+      <td style="padding:3px 8px;border:1px solid #ddd;font-size:7.5pt;vertical-align:top;">
+        ${col1[i] ? `<span style="color:#1a3a5c;margin-right:4px;">☑</span>${col1[i]}` : ''}
+      </td>
+      <td style="padding:3px 8px;border:1px solid #ddd;font-size:7.5pt;vertical-align:top;">
+        ${col2[i] ? `<span style="color:#1a3a5c;margin-right:4px;">☑</span>${col2[i]}` : ''}
+      </td>
+    </tr>
+  `).join('');
+
+  const addrFull = `〒${c.postal}　${c.address}${c.building ? '　' + c.building : ''}`;
+  const deptContact = c.dept ? `${c.dept}　${c.contact}` : c.contact;
+
+  document.getElementById('printDoc').innerHTML = `
+    <div style="max-width:780px;margin:0 auto;padding:0 8px;font-family:'Noto Sans JP',sans-serif;">
+
+      <!-- タイトル -->
+      <div style="text-align:center;margin-bottom:14px;border-bottom:2px solid #1a3a5c;padding-bottom:10px;">
+        ${d.client_name ? `<div style="font-size:14pt;font-weight:700;color:#1a3a5c;margin:4px 0;">${d.client_name}　御中</div>` : ''}
+        <div style="font-size:8.5pt;color:#666;margin-top:4px;">申込書作成日：${formatDate(d.app_date)}　／　営業担当：${d.staff_name}${d.creator_name ? '　／　作成者：' + d.creator_name : ''}${d.referral_company ? '　／　紹介者：' + d.referral_company : ''}</div>
+      </div>
+
+      <!-- 顧客情報 -->
+      <table style="width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:10px;">
+        <tr>
+          <th style="background:#1a3a5c;color:white;padding:6px 10px;text-align:left;width:20%;border:1px solid #aaa;">会社名</th>
+          <td style="padding:6px 10px;border:1px solid #aaa;font-weight:700;font-size:10pt;" colspan="3">${c.company}</td>
+        </tr>
+        <tr style="background:#f8f7f4;">
+          <th style="background:#e8e4df;padding:6px 10px;text-align:left;border:1px solid #aaa;">住所</th>
+          <td style="padding:6px 10px;border:1px solid #aaa;" colspan="3">${addrFull}</td>
+        </tr>
+        <tr>
+          <th style="background:#e8e4df;padding:6px 10px;text-align:left;border:1px solid #aaa;">代表者名</th>
+          <td style="padding:6px 10px;border:1px solid #aaa;width:30%;">${c.rep}</td>
+          <th style="background:#e8e4df;padding:6px 10px;text-align:left;border:1px solid #aaa;width:15%;">代表電話</th>
+          <td style="padding:6px 10px;border:1px solid #aaa;width:25%;">${c.tel}</td>
+        </tr>
+        <tr style="background:#f8f7f4;">
+          <th style="background:#e8e4df;padding:6px 10px;text-align:left;border:1px solid #aaa;">ご担当者</th>
+          <td style="padding:6px 10px;border:1px solid #aaa;">${deptContact}</td>
+          <th style="background:#e8e4df;padding:6px 10px;text-align:left;border:1px solid #aaa;">請求先メール</th>
+          <td style="padding:6px 10px;border:1px solid #aaa;">${c.email}</td>
+        </tr>
+      </table>
+
+      <!-- サービス内容 -->
+      <div style="font-size:9pt;font-weight:700;color:#1a3a5c;margin-bottom:5px;border-left:3px solid #c8832a;padding-left:7px;">■ 契約サービス内容</div>
+      <table style="width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:10px;">
+        <thead>
+          <tr style="background:#1a3a5c;">
+            <th style="color:white;padding:7px 10px;text-align:left;border:1px solid #aaa;width:12%;">サービス名</th>
+            <th style="color:white;padding:7px 10px;text-align:left;border:1px solid #aaa;">内容・プラン</th>
+            <th style="color:white;padding:7px 10px;text-align:center;border:1px solid #aaa;width:12%;">数量・期間</th>
+            <th style="color:white;padding:7px 10px;text-align:right;border:1px solid #aaa;width:14%;">金額（税抜）</th>
+            <th style="color:white;padding:7px 10px;text-align:left;border:1px solid #aaa;width:20%;">備考</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${serviceRows}
+          <tr style="background:#f0ede8;">
+            <td colspan="3" style="text-align:right;font-weight:700;padding:8px 10px;border:1px solid #aaa;">合計金額</td>
+            <td style="text-align:right;font-weight:700;padding:8px 10px;border:1px solid #aaa;font-size:10pt;">¥${formatPrice(d.total_ex)}</td>
+            <td style="padding:8px 10px;border:1px solid #aaa;font-size:10pt;font-weight:700;color:#555;">税込 ¥${formatPrice(d.total_in)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 確認事項：2カラム -->
+      <div style="font-size:9pt;font-weight:700;color:#1a3a5c;margin-bottom:5px;border-left:3px solid #c8832a;padding-left:7px;">■ 確認事項</div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
+        ${checkRows}
+      </table>
+
+      <!-- 署名欄（1行・コンパクト） -->
+      <table style="width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:8px;">
+        <tr>
+          <th style="background:#e8e4df;padding:5px 10px;text-align:left;border:1px solid #aaa;width:35%;">【販売元】株式会社リクロコ<br><span style="font-size:7.5pt;font-weight:400;color:#666;">〒451-0045 愛知県名古屋市西区名駅2-29-2　プリマヴェール名駅ノルテ602　TEL:050-3612-8510</span></th>
+          <th style="background:#e8e4df;padding:5px 10px;text-align:left;border:1px solid #aaa;width:32%;">営業担当者名</th>
+          <th style="background:#e8e4df;padding:5px 10px;text-align:left;border:1px solid #aaa;width:33%;">紹介者</th>
+        </tr>
+        <tr>
+          <td style="padding:6px 10px;border:1px solid #aaa;font-size:8pt;color:#666;"></td>
+          <td style="padding:6px 10px;border:1px solid #aaa;font-weight:500;">${d.staff_name}</td>
+          <td style="padding:6px 10px;border:1px solid #aaa;">${d.referral_company || ''}</td>
+        </tr>
+      </table>
+
+      <!-- 電子承認記録（コンパクト1行） -->
+      <div style="background:#f0f4fa;border:1px solid #b0c4de;border-radius:4px;padding:6px 12px;font-size:7.5pt;color:#444;display:flex;gap:24px;flex-wrap:wrap;">
+        <span style="font-weight:700;color:#1a3a5c;">【電子承認記録】</span>
+        <span>承認日時：<strong>${approvedAt}</strong></span>
+        <span>承認者：<strong>${c.email}</strong></span>
+        <span style="color:#999;font-size:7pt;">UA：${browserInfo.substring(0,60)}…</span>
+      </div>
+
+    </div>
+  `;
+}
+
+function printPDF() {
+  window.print();
+}
+
+loadData();
+</script>
+</body>
+</html>

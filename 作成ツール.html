@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>申込書作成ツール｜株式会社リクロコ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
+  :root{--bg:#f5f4f0;--surface:#fff;--border:#ddd9d0;--accent:#1a3a5c;--accent2:#c8832a;--text:#1c1c1c;--muted:#888;--danger:#c0392b;--input-bg:#fafaf8;--shadow:0 2px 12px rgba(0,0,0,0.08);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px 16px;}
+  .app-header{max-width:960px;margin:0 auto 20px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--accent);padding-bottom:14px;}
+  .app-header h1{font-size:1.4rem;font-weight:700;color:var(--accent);letter-spacing:.04em;}
+  .app-header .subtitle{font-size:.72rem;color:var(--muted);font-family:'DM Mono',monospace;margin-top:4px;}
+  .badge{background:var(--accent2);color:#fff;font-size:.7rem;padding:3px 10px;border-radius:20px;font-weight:500;}
+  .tabs{max-width:960px;margin:0 auto;display:flex;gap:4px;border-bottom:2px solid var(--accent);}
+  .tab{padding:10px 24px;font-size:.88rem;font-weight:500;font-family:'Noto Sans JP',sans-serif;background:none;border:none;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0;transition:all .2s;letter-spacing:.03em;}
+  .tab.active{background:var(--accent);color:#fff;}
+  .tab:not(.active):hover{background:#e8e4df;color:var(--accent);}
+  .tab-content{display:none;max-width:960px;margin:0 auto;}
+  .tab-content.active{display:flex;flex-direction:column;gap:20px;padding-top:20px;}
+  .card{background:var(--surface);border-radius:12px;box-shadow:var(--shadow);}
+  .card-header{background:var(--accent);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:10px;}
+  .card-header .step{width:24px;height:24px;background:var(--accent2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;font-family:'DM Mono',monospace;flex-shrink:0;}
+  .card-header h2{font-size:.92rem;font-weight:500;letter-spacing:.05em;}
+  .card-body{padding:20px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-group{display:flex;flex-direction:column;gap:5px;}
+  .form-group.full{grid-column:1/-1;}
+  label{font-size:.76rem;font-weight:500;color:var(--accent);letter-spacing:.03em;}
+  label .req{color:var(--danger);margin-left:2px;}
+  label .opt{color:var(--muted);font-weight:400;font-size:.7rem;margin-left:4px;}
+  input[type="text"],input[type="email"],input[type="tel"],input[type="date"],input[type="number"],select,textarea{background:var(--input-bg);border:1.5px solid var(--border);border-radius:8px;padding:9px 12px;font-size:.88rem;font-family:'Noto Sans JP',sans-serif;color:var(--text);transition:border-color .2s,box-shadow .2s;width:100%;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,58,92,.1);}
+  /* サービス行 */
+  .svc-list{display:flex;flex-direction:column;gap:10px;}
+  .svc-row{background:var(--input-bg);border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+  .svc-row-top{display:grid;grid-template-columns:1.3fr 2fr 70px 1fr 1.2fr auto;gap:10px;align-items:end;}
+  .svc-row .fg label{font-size:.7rem;color:var(--muted);}
+  .svc-row input,.svc-row select{padding:7px 10px;font-size:.83rem;}
+  .svc-row textarea{padding:7px 10px;font-size:.83rem;resize:vertical;min-height:48px;}
+  .remove-btn{background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem;padding:4px 6px;border-radius:4px;align-self:end;margin-bottom:1px;flex-shrink:0;}
+  .remove-btn:hover{background:rgba(192,57,43,.1);}
+  .add-svc-btn{background:none;border:2px dashed var(--accent);color:var(--accent);border-radius:8px;padding:9px;cursor:pointer;font-size:.83rem;font-family:'Noto Sans JP',sans-serif;width:100%;transition:all .2s;margin-top:8px;}
+  .add-svc-btn:hover{background:rgba(26,58,92,.05);}
+  /* 合計 */
+  .total-area{background:#f0ede8;border-radius:10px;padding:16px 20px;display:flex;justify-content:flex-end;gap:28px;margin-top:14px;}
+  .total-item{text-align:right;}
+  .total-item .t-label{font-size:.72rem;color:var(--muted);margin-bottom:3px;}
+  .total-item .amount{font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent);}
+  .total-item.tax .amount{font-size:1.3rem;color:var(--accent2);}
+  /* チェック */
+  .checklist{display:flex;flex-direction:column;gap:7px;}
+  .check-item{display:flex;align-items:flex-start;gap:10px;padding:9px 13px;background:var(--input-bg);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;transition:border-color .2s;}
+  .check-item:hover{border-color:var(--accent);}
+  .check-item input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent);flex-shrink:0;margin-top:3px;cursor:pointer;}
+  .check-item span{font-size:.78rem;line-height:1.6;}
+  /* アクション */
+  .action-area{display:flex;gap:14px;justify-content:center;padding:6px 0;flex-wrap:wrap;}
+  .btn{padding:12px 24px;border-radius:10px;font-size:.88rem;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;border:none;transition:all .2s;letter-spacing:.04em;display:flex;align-items:center;gap:7px;}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(26,58,92,.3);}
+  .btn-primary:hover{background:#142d48;transform:translateY(-1px);}
+  .btn-secondary{background:#fff;color:var(--accent);border:2px solid var(--accent);}
+  .btn-secondary:hover{background:#f0ede8;}
+  .btn-accent{background:var(--accent2);color:#fff;box-shadow:0 4px 14px rgba(200,131,42,.3);}
+  .btn-accent:hover{background:#b0731e;transform:translateY(-1px);}
+  .btn-green{background:#27ae60;color:#fff;box-shadow:0 4px 14px rgba(39,174,96,.3);}
+  .btn-green:hover{background:#219a52;transform:translateY(-1px);}
+  /* リンク */
+  .link-result{background:#eaf4ea;border:1.5px solid #5cb85c;border-radius:10px;padding:18px 22px;display:none;}
+  .link-result.active{display:block;}
+  .link-result h3{font-size:.88rem;color:#2d7a2d;margin-bottom:10px;}
+  .link-box{display:flex;gap:10px;align-items:center;}
+  .link-box input{flex:1;font-family:'DM Mono',monospace;font-size:.75rem;background:#fff;border:1.5px solid #5cb85c;border-radius:6px;padding:9px 12px;color:#333;}
+  .copy-btn{background:#5cb85c;color:#fff;border:none;border-radius:6px;padding:9px 14px;cursor:pointer;font-size:.8rem;font-family:'Noto Sans JP',sans-serif;white-space:nowrap;transition:background .2s;}
+  .copy-btn:hover{background:#4a9a4a;}
+  .link-note{font-size:.73rem;color:#555;margin-top:9px;line-height:1.7;}
+  /* マスタ */
+  .master-section{margin-bottom:24px;}
+  .master-section h3{font-size:.9rem;font-weight:600;color:var(--accent);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+  .master-table{width:100%;border-collapse:collapse;font-size:.83rem;margin-bottom:10px;}
+  .master-table th{background:#f0ede8;padding:8px 12px;text-align:left;font-weight:600;color:var(--accent);font-size:.76rem;border-bottom:2px solid var(--border);}
+  .master-table td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .master-table input{padding:5px 8px;font-size:.82rem;}
+  .del-btn{background:none;border:none;color:var(--danger);cursor:pointer;font-size:.95rem;padding:2px 6px;border-radius:4px;}
+  .del-btn:hover{background:rgba(192,57,43,.1);}
+  .add-master-btn{background:none;border:2px dashed var(--accent2);color:var(--accent2);border-radius:7px;padding:7px 14px;cursor:pointer;font-size:.8rem;font-family:'Noto Sans JP',sans-serif;transition:all .2s;}
+  .add-master-btn:hover{background:rgba(200,131,42,.06);}
+  /* 検索付きスタッフ選択 */
+  .staff-select-wrap{position:relative;width:100%;}
+  .staff-input{background:var(--input-bg);border:1.5px solid var(--border);border-radius:8px;padding:9px 36px 9px 12px;font-size:.88rem;font-family:'Noto Sans JP',sans-serif;color:var(--text);width:100%;cursor:pointer;transition:border-color .2s,box-shadow .2s;}
+  .staff-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,58,92,.1);}
+  .staff-input-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.8rem;pointer-events:none;}
+  .staff-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--accent);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.18);z-index:9999;overflow:hidden;}
+  .staff-dropdown.open{display:block;}
+  .staff-search-box{padding:8px 10px;border-bottom:1px solid var(--border);}
+  .staff-search-box input{background:#f5f4f0;border:1.5px solid var(--border);border-radius:6px;padding:7px 10px;font-size:.83rem;font-family:'Noto Sans JP',sans-serif;width:100%;}
+  .staff-search-box input:focus{outline:none;border-color:var(--accent);}
+  .staff-options{max-height:240px;overflow-y:auto;}
+  .staff-option{padding:9px 14px;font-size:.86rem;cursor:pointer;transition:background .15s;}
+  .staff-option:hover,.staff-option.focused{background:#eaf0f8;}
+  .staff-option.selected{background:#dce8f5;font-weight:500;color:var(--accent);}
+  .staff-option-empty{padding:10px 14px;font-size:.82rem;color:var(--muted);text-align:center;}
+  @media(max-width:700px){.form-grid{grid-template-columns:1fr;}.svc-row-top{grid-template-columns:1fr 1fr;}.action-area{flex-direction:column;}}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div><h1>申込書作成ツール</h1><div class="subtitle">株式会社リクロコ — 社内専用ツール v3.0</div></div>
+  <span class="badge">自社入力用</span>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('create')">📝 申込書作成</button>
+  <button class="tab" onclick="switchTab('master')">⚙️ マスタ管理</button>
+</div>
+
+<!-- 申込書作成 -->
+<div class="tab-content active" id="tab-create">
+
+  <div class="card">
+    <div class="card-header"><div class="step">1</div><h2>申込書作成日・担当者</h2></div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="form-group"><label>申込書作成日 <span class="req">*</span></label><input type="date" id="app_date"></div>
+        <div class="form-group">
+          <label>営業担当 <span class="req">*</span></label>
+          <div class="staff-select-wrap" id="wrap_staff_name">
+            <input type="text" class="staff-input" id="display_staff_name" placeholder="選択または検索…" readonly onclick="toggleStaffDropdown('staff_name')">
+            <span class="staff-input-arrow">▼</span>
+            <div class="staff-dropdown" id="drop_staff_name">
+              <div class="staff-search-box"><input type="text" id="search_staff_name" placeholder="苗字の1文字で検索（例：や、山）" oninput="filterStaff('staff_name')" onkeydown="navStaff(event,'staff_name')"></div>
+              <div class="staff-options" id="opts_staff_name"></div>
+            </div>
+            <input type="hidden" id="staff_name">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>申込書作成者 <span class="opt">任意</span></label>
+          <div class="staff-select-wrap" id="wrap_creator_name">
+            <input type="text" class="staff-input" id="display_creator_name" placeholder="選択または検索…" readonly onclick="toggleStaffDropdown('creator_name')">
+            <span class="staff-input-arrow">▼</span>
+            <div class="staff-dropdown" id="drop_creator_name">
+              <div class="staff-search-box"><input type="text" id="search_creator_name" placeholder="苗字の1文字で検索（例：た、田）" oninput="filterStaff('creator_name')" onkeydown="navStaff(event,'creator_name')"></div>
+              <div class="staff-options" id="opts_creator_name"></div>
+            </div>
+            <input type="hidden" id="creator_name">
+          </div>
+        </div>
+        <div class="form-group"><label>紹介者 <span class="opt">任意</span></label><input type="text" id="referral_company" placeholder="例：株式会社〇〇"></div>
+        <div class="form-group full"><label>クライアント名 <span class="req">*</span></label><input type="text" id="client_name" placeholder="例：〇〇株式会社"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="step">2</div><h2>契約サービス内容</h2></div>
+    <div class="card-body">
+      <p style="font-size:.78rem;color:var(--muted);margin-bottom:14px;">※ 自社で設定します。顧客は閲覧のみ（編集不可）です。</p>
+      <div class="svc-list" id="svc_list"></div>
+      <button class="add-svc-btn" onclick="addSvcRow()">＋ サービス行を追加</button>
+      <div class="total-area">
+        <div class="total-item"><div class="t-label">合計（税抜）</div><div class="amount" id="total_ex">¥0</div></div>
+        <div class="total-item tax"><div class="t-label">合計（税込）</div><div class="amount" id="total_in">¥0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="step">3</div><h2>チェック項目</h2></div>
+    <div class="card-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <p style="font-size:.78rem;color:var(--muted);">顧客確認ページに表示する項目を選択してください。</p>
+        <div style="display:flex;gap:8px;">
+          <button type="button" onclick="setAllChecks(true)" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:.76rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;font-weight:500;">✅ 全選択</button>
+          <button type="button" onclick="setAllChecks(false)" style="background:#fff;color:var(--accent);border:1.5px solid var(--accent);border-radius:6px;padding:6px 14px;font-size:.76rem;font-family:'Noto Sans JP',sans-serif;cursor:pointer;font-weight:500;">☐ 全解除</button>
+        </div>
+      </div>
+      <div class="checklist">
+        <label class="check-item"><input type="checkbox" checked><span>請求は掲載開始月の月末締で発行／お支払いは翌月末払い（振込）でお願いします。</span></label>
+        <label class="check-item"><input type="checkbox" checked><span>請求書は上記の請求先メールアドレス宛に送付します。</span></label>
+        <label class="check-item"><input type="checkbox" checked><span>振込手数料はお客様負担にてお願いします。</span></label>
+        <label class="check-item"><input type="checkbox" checked><span>Indeed PLUSチャージ料につきましては【株式会社ONE（オーエヌイー）】より、チャージ利用月の"月末締め、翌月末支払い"で弊社からの請求とは別になりますので、あらかじめご了承ください。</span></label>
+        <label class="check-item"><input type="checkbox" checked><span>IndeedPLUSチャージ料ご利用時の運用期間は、応募状況に応じて設定額や期間の変更を提案する場合もあります。</span></label>
+        <label class="check-item"><input type="checkbox" checked><span>応募者情報は個人情報として適切に管理し、採用選考の目的でのみクライアントと共有されることに同意します。</span></label>
+        <label class="check-item"><input type="checkbox" checked><span>求人内容・労働条件・掲載情報については申込企業の責任において正確な情報を提供することに同意します。</span></label>
+        <label class="check-item"><input type="checkbox" checked><span>求人媒体の掲載審査・掲載可否・表示順位等は各媒体の規定に基づき決定されることを理解します。</span></label>
+        <label class="check-item"><input type="checkbox" checked><span>求人媒体の規約変更やポリシー変更により掲載内容の修正・停止が行われる場合があることに同意します。</span></label>
+        <label class="check-item"><input type="checkbox" checked><span>応募者との採用選考・面接・雇用契約等は申込企業の責任において行うことに同意します。</span></label>
+        <label class="check-item"><input type="checkbox" checked><span>ご利用料金の振込遅延が続く場合、取引停止または前入金制による対応とさせていただく場合もあります。</span></label>
+        <label class="check-item"><input type="checkbox" checked><span>申込書の受領後、アカウント申請および原稿作成等を進めてまいります。アカウント申請、原稿作成・承認後に掲載を取りやめる場合は、初期設定費55,000円（税込）のみ頂戴いたしますのでご了承ください。</span></label>
+        <label class="check-item"><input type="checkbox" checked><span>弊社にて運用管理するindeedアカウントは、契約終了後もお渡しいたしかねますのでご了承ください。</span></label>
+        <label class="check-item"><input type="checkbox" checked><span>indeed運用管理代行サービスの契約は『自動更新』です。継続されない場合はその旨ご連絡をお願いします。</span></label>
+      </div>
+      <div style="margin-top:14px;">
+        <div style="font-size:.76rem;font-weight:500;color:var(--accent);margin-bottom:7px;">＋ 追加項目（任意）</div>
+        <div id="free_checks" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <button type="button" onclick="addFreeCheck()" style="margin-top:9px;background:none;border:2px dashed var(--accent);color:var(--accent);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:.8rem;font-family:'Noto Sans JP',sans-serif;width:100%;transition:all .2s;">＋ 項目を追加</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-area">
+    <button class="btn btn-secondary" onclick="resetForm()">🔄 リセット</button>
+    <button class="btn btn-green" onclick="downloadCSV()">📊 CSV出力</button>
+    <button class="btn btn-accent" onclick="generateLink()">🔗 顧客確認リンクを生成</button>
+  </div>
+
+  <div class="link-result" id="linkResult">
+    <h3>✅ 顧客確認リンクが生成されました</h3>
+    <div class="link-box">
+      <input type="text" id="generatedLink" readonly>
+      <button class="copy-btn" onclick="copyLink()">📋 コピー</button>
+    </div>
+    <p class="link-note">
+      ※ このリンクをLINEまたはメールで顧客に送付してください。<br>
+      ※ 顧客はリンクを開くと契約内容を確認し、会社情報を入力して送信できます。<br>
+      ※ リンクには申込内容がすべて含まれています（サーバー不要）。
+    </p>
+  </div>
+</div>
+
+<!-- マスタ管理 -->
+<div class="tab-content" id="tab-master">
+  <div class="card">
+    <div class="card-header"><h2>⚙️ マスタ管理</h2></div>
+    <div class="card-body">
+      <p style="font-size:.78rem;color:var(--muted);margin-bottom:20px;">サービス名・プラン・単位の選択肢を管理できます。変更はブラウザのローカルストレージに自動保存されます。別のPCでも使う場合はエクスポート→インポートしてください。</p>
+      <div class="master-section">
+        <h3>スタッフ</h3>
+        <table class="master-table"><thead><tr><th style="width:28px;"></th><th>氏名</th><th style="width:50px;"></th></tr></thead><tbody id="master_staff"></tbody></table>
+        <button class="add-master-btn" onclick="addMasterRow('staff','新しいスタッフ')">＋ 追加</button>
+      </div>
+      <div class="master-section">
+        <h3>サービス名</h3>
+        <table class="master-table"><thead><tr><th style="width:28px;"></th><th>サービス名</th><th style="width:50px;"></th></tr></thead><tbody id="master_services"></tbody></table>
+        <button class="add-master-btn" onclick="addMasterRow('services','新しいサービス')">＋ 追加</button>
+      </div>
+      <div class="master-section">
+        <h3>プラン・内容</h3>
+        <table class="master-table"><thead><tr><th style="width:28px;"></th><th>プラン名</th><th style="width:50px;"></th></tr></thead><tbody id="master_plans"></tbody></table>
+        <button class="add-master-btn" onclick="addMasterRow('plans','新しいプラン')">＋ 追加</button>
+      </div>
+      <div class="master-section">
+        <h3>単位</h3>
+        <table class="master-table"><thead><tr><th style="width:28px;"></th><th>単位</th><th style="width:50px;"></th></tr></thead><tbody id="master_units"></tbody></table>
+        <button class="add-master-btn" onclick="addMasterRow('units','新しい単位')">＋ 追加</button>
+      </div>
+      <div class="action-area" style="margin-top:8px;">
+        <button class="btn btn-secondary" onclick="exportMaster()">📤 エクスポート</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📥 インポート</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importMaster(event)">
+        <button class="btn btn-primary" onclick="applyMaster()">✅ 申込書作成に反映</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let master = {
+  staff: ['山崎'],
+  services: ['indeed','indeedPLUS'],
+  plans: ['運用管理 12ヶ月プラン（春日井）','運用管理 12ヶ月プラン（小牧）','運用管理 12ヶ月プラン（浜松）','運用管理代行 初期設定','チャージ料','広告宣伝費（有料枠チャージの20%）'],
+  units: ['ヶ月','式','個','件','本','回','セット','その他'],
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('app_date').value = new Date().toISOString().split('T')[0];
+  loadMasterFromStorage();
+  renderMasterTables();
+  renderStaffSelects();
+  addSvcRow();
+});
+
+// ひらがな→カタカナ変換
+function toKatakana(str) {
+  return str.replace(/[\u3041-\u3096]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+}
+// カタカナ→ひらがな変換
+function toHiragana(str) {
+  return str.replace(/[\u30A1-\u30F6]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+}
+
+// 苗字の1文字マッチ（ひらがな・カタカナ・漢字対応）
+function matchStaff(name, query) {
+  if (!query) return true;
+  const q = query.trim();
+  if (!q) return true;
+  const first = name.charAt(0);
+  // 漢字・英字直接マッチ
+  if (first === q) return true;
+  // ひらがな・カタカナ相互変換マッチ（先頭1文字の読みは登録名から判断できないため、
+  // 入力がひらがな/カタカナの場合は名前全体をひらがな化して前方一致）
+  const nameH = toHiragana(name);
+  const qH = toHiragana(q);
+  const nameK = toKatakana(name);
+  const qK = toKatakana(q);
+  return nameH.startsWith(qH) || nameK.startsWith(qK) || name.includes(q);
+}
+
+function renderStaffSelects() {
+  ['staff_name', 'creator_name'].forEach(id => renderStaffOptions(id, ''));
+}
+
+function renderStaffOptions(fieldId, query) {
+  const container = document.getElementById('opts_' + fieldId);
+  if (!container) return;
+  const staff = Array.isArray(master.staff) ? master.staff : [];
+  const current = document.getElementById(fieldId).value;
+  const filtered = staff.filter(s => matchStaff(s, query));
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="staff-option-empty">${staff.length === 0 ? 'スタッフが未登録です' : '該当なし'}</div>`;
+    return;
+  }
+  container.innerHTML = filtered.map(s => `
+    <div class="staff-option${s === current ? ' selected' : ''}"
+         onclick="selectStaff('${fieldId}','${s.replace(/'/g,"\\'")}')">
+      ${s}
+    </div>
+  `).join('');
+}
+
+function toggleStaffDropdown(fieldId) {
+  const drop = document.getElementById('drop_' + fieldId);
+  const isOpen = drop.classList.contains('open');
+  // 他を全部閉じる
+  document.querySelectorAll('.staff-dropdown.open').forEach(d => d.classList.remove('open'));
+  if (!isOpen) {
+    renderStaffOptions(fieldId, '');
+    document.getElementById('search_' + fieldId).value = '';
+    drop.classList.add('open');
+    setTimeout(() => document.getElementById('search_' + fieldId).focus(), 50);
+  }
+}
+
+function filterStaff(fieldId) {
+  const query = document.getElementById('search_' + fieldId).value;
+  renderStaffOptions(fieldId, query);
+}
+
+function navStaff(e, fieldId) {
+  if (e.key === 'Escape') {
+    document.getElementById('drop_' + fieldId).classList.remove('open');
+  }
+}
+
+function selectStaff(fieldId, name) {
+  document.getElementById(fieldId).value = name;
+  document.getElementById('display_' + fieldId).value = name;
+  document.getElementById('drop_' + fieldId).classList.remove('open');
+  renderStaffOptions(fieldId, '');
+}
+
+// ドロップダウン外クリックで閉じる
+document.addEventListener('click', e => {
+  if (!e.target.closest('.staff-select-wrap')) {
+    document.querySelectorAll('.staff-dropdown.open').forEach(d => d.classList.remove('open'));
+  }
+});
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+function buildSvcRowHTML() {
+  const sOpts = master.services.map(s=>`<option value="${s}">${s}</option>`).join('');
+  const pOpts = master.plans.map(p=>`<option value="${p}">${p}</option>`).join('');
+  const uOpts = master.units.map(u=>`<option value="${u}">${u}</option>`).join('');
+  return `<div class="svc-row">
+    <div class="svc-row-top">
+      <div class="fg form-group"><label>サービス名</label><select class="loc-service">${sOpts}</select></div>
+      <div class="fg form-group"><label>内容・プラン</label><select class="loc-plan">${pOpts}</select></div>
+      <div class="fg form-group"><label>数量</label><input type="number" class="loc-qty" placeholder="12" min="0"></div>
+      <div class="fg form-group"><label>単位</label><select class="loc-unit">${uOpts}</select></div>
+      <div class="fg form-group"><label>金額（税抜・円）</label><input type="text" class="loc-price" placeholder="例：135000" oninput="calcTotal()"></div>
+      <button class="remove-btn" onclick="removeSvcRow(this)">✕</button>
+    </div>
+    <div class="form-group" style="padding:0 2px;">
+      <label>備考 <span class="opt">任意</span></label>
+      <textarea class="loc-note" placeholder="例：掲載開始予定日 2026年3月上旬、開始日より12ヶ月カウント" rows="2"></textarea>
+    </div>
+  </div>`;
+}
+
+function addSvcRow() {
+  const list = document.getElementById('svc_list');
+  const div = document.createElement('div');
+  div.innerHTML = buildSvcRowHTML();
+  list.appendChild(div.firstElementChild);
+}
+
+function removeSvcRow(btn) {
+  const list = document.getElementById('svc_list');
+  if (list.children.length > 1) { btn.closest('.svc-row').remove(); calcTotal(); }
+}
+
+function calcTotal() {
+  let total = 0;
+  document.querySelectorAll('.loc-price').forEach(i=>{ total += parseInt(i.value.replace(/,/g,''))||0; });
+  document.getElementById('total_ex').textContent = '¥'+total.toLocaleString();
+  document.getElementById('total_in').textContent = '¥'+Math.floor(total*1.1).toLocaleString();
+}
+
+function setAllChecks(state) {
+  document.querySelectorAll('.checklist .check-item input[type="checkbox"]').forEach(cb => { cb.checked = state; });
+}
+
+function addFreeCheck() {
+  const c = document.getElementById('free_checks');
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;align-items:flex-start;';
+  row.innerHTML = `<textarea placeholder="追加の確認事項を入力…" rows="2" style="flex:1;background:var(--input-bg);border:1.5px solid var(--accent2);border-radius:8px;padding:9px 12px;font-size:.83rem;font-family:'Noto Sans JP',sans-serif;color:var(--text);resize:vertical;"></textarea><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1rem;padding:8px 4px;flex-shrink:0;">✕</button>`;
+  c.appendChild(row);
+  row.querySelector('textarea').focus();
+}
+
+function getFormData() {
+  const services = [];
+  document.querySelectorAll('.svc-row').forEach(row=>{
+    const qty = row.querySelector('.loc-qty').value;
+    const unit = row.querySelector('.loc-unit').value;
+    services.push({
+      service: row.querySelector('.loc-service').value,
+      plan: row.querySelector('.loc-plan').value,
+      qty, unit,
+      period: qty ? `${qty}${unit}` : '',
+      price: row.querySelector('.loc-price').value||'0',
+      note: row.querySelector('.loc-note').value.trim(),
+    });
+  });
+  const checks = [];
+  document.querySelectorAll('.checklist .check-item input[type="checkbox"]').forEach(cb=>{
+    if(cb.checked) checks.push(cb.closest('.check-item').querySelector('span').textContent);
+  });
+  document.querySelectorAll('#free_checks textarea').forEach(ta=>{
+    if(ta.value.trim()) checks.push(ta.value.trim());
+  });
+  let totalEx = 0;
+  services.forEach(s=>{ totalEx += parseInt(s.price.replace(/,/g,''))||0; });
+  return {
+    app_date: document.getElementById('app_date').value,
+    staff_name: document.getElementById('staff_name').value,
+    creator_name: document.getElementById('creator_name').value,
+    referral_company: document.getElementById('referral_company').value,
+    client_name: document.getElementById('client_name').value,
+    services, checks, total_ex: totalEx, total_in: Math.floor(totalEx*1.1),
+  };
+}
+
+// GAS WebアプリURL（顧客確認.htmlと同じURLを設定）
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrcKueQQ7NvZ2L1QgXo9TdNimAnz0e-Q3WdMfXeyasR8RtzkyoIixG83dLym2bsgsM/exec';  // 例: 'https://script.google.com/macros/s/XXXXXX/exec'
+
+async function generateLink() {
+  const d = getFormData();
+  if (!d.app_date||!d.staff_name||!d.client_name) { alert('申込書作成日・営業担当・クライアント名を入力してください。'); return; }
+  if (d.services.some(s=>s.price==='0')) { if (!confirm('金額が未入力のサービスがあります。このまま続けますか？')) return; }
+
+  const btn = document.querySelector('.btn-accent');
+  const originalText = btn.innerHTML;
+
+  if (!GAS_URL) {
+    // GAS_URL未設定の場合は従来通りURLエンコード方式
+    const encoded = btoa(encodeURIComponent(JSON.stringify(d)));
+    const baseUrl = window.location.href.replace(/[^\/]*$/, '')+'顧客確認.html';
+    const url = `${baseUrl}?d=${encoded}`;
+    document.getElementById('generatedLink').value = url;
+    document.getElementById('linkResult').classList.add('active');
+    document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
+    return;
+  }
+
+  // GAS_URL設定済みの場合はGASにデータ保存→短縮ID取得
+  btn.innerHTML = '⏳ 生成中...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save', data: d }),
+    });
+
+    // no-corsのためレスポンスは読めないが、GASは処理している
+    // IDはタイムスタンプベースで生成してURLに使う（フォールバック）
+    const timestamp = Date.now().toString(36).toUpperCase().slice(-6);
+    const baseUrl = window.location.href.replace(/[^\/]*$/, '')+'顧客確認.html';
+    const url = `${baseUrl}?d=${btoa(encodeURIComponent(JSON.stringify({...d, draft_id: timestamp})))}`;
+    document.getElementById('generatedLink').value = url;
+    document.getElementById('linkResult').classList.add('active');
+    document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
+  } catch(e) {
+    alert('リンク生成に失敗しました。もう一度お試しください。');
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
+
+function copyLink() {
+  const input = document.getElementById('generatedLink');
+  input.select();
+  navigator.clipboard.writeText(input.value).then(()=>{
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ コピーしました';
+    setTimeout(()=>{ btn.textContent = '📋 コピー'; }, 2000);
+  });
+}
+
+function downloadCSV() {
+  const d = getFormData();
+  if (!d.referral_company) { alert('紹介先企業名を入力してください。'); return; }
+  const esc = v => `"${String(v).replace(/"/g,'""')}"`;
+  const rows = [
+    ['申込書作成日','担当者名','紹介先企業名','サービス名','内容・プラン','数量','単位','金額（税抜）','備考'],
+    ...d.services.map(s=>[d.app_date,d.staff_name,d.referral_company,s.service,s.plan,s.qty,s.unit,s.price,s.note]),
+    [],
+    ['合計（税抜）',d.total_ex,'合計（税込）',d.total_in],
+  ];
+  const csv = '\uFEFF'+rows.map(r=>r.map(esc).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `申込書_${d.referral_company}_${d.app_date}.csv`;
+  a.click();
+}
+
+function resetForm() {
+  if (confirm('入力内容をリセットしますか？')) location.reload();
+}
+
+// マスタ管理
+const DEFAULT_MASTER = {
+  staff: [],
+  services: ['indeed','indeedPLUS'],
+  plans: ['運用管理 12ヶ月プラン（春日井）','運用管理 12ヶ月プラン（小牧）','運用管理 12ヶ月プラン（浜松）','運用管理代行 初期設定','チャージ料','広告宣伝費（有料枠チャージの20%）'],
+  units: ['ヶ月','式','個','件','本','回','セット','その他'],
+};
+
+function loadMasterFromStorage() {
+  try {
+    const s = localStorage.getItem('recroco_master');
+    if (s) {
+      const parsed = JSON.parse(s);
+      // 古いデータにキーが欠けていても補完する
+      master = Object.assign({}, DEFAULT_MASTER, parsed);
+      // 各キーが配列でない場合も補完
+      ['staff','services','plans','units'].forEach(k => {
+        if (!Array.isArray(master[k])) master[k] = DEFAULT_MASTER[k].slice();
+      });
+    }
+  } catch(e) {
+    master = Object.assign({}, DEFAULT_MASTER);
+  }
+}
+function saveMasterToStorage() {
+  try { localStorage.setItem('recroco_master', JSON.stringify(master)); } catch(e){}
+}
+function renderMasterTables() {
+  ['staff','services','plans','units'].forEach(key=>{
+    const tbody = document.getElementById('master_'+key);
+    if (!tbody) return;
+    const arr = Array.isArray(master[key]) ? master[key] : [];
+    tbody.innerHTML = arr.map((v,i)=>`
+      <tr draggable="true" data-key="${key}" data-idx="${i}"
+          style="cursor:grab;"
+          ondragstart="onDragStart(event)"
+          ondragover="onDragOver(event)"
+          ondrop="onDrop(event)"
+          ondragend="onDragEnd(event)">
+        <td style="width:28px;color:#bbb;font-size:1rem;text-align:center;cursor:grab;user-select:none;">⠿</td>
+        <td><input type="text" value="${v.replace(/"/g,'&quot;')}" onchange="master.${key}[${i}]=this.value;saveMasterToStorage();"></td>
+        <td><button class="del-btn" onclick="master.${key}.splice(${i},1);renderMasterTables();saveMasterToStorage();">✕</button></td>
+      </tr>
+    `).join('');
+  });
+}
+
+// ドラッグ＆ドロップ
+let dragSrcKey = null, dragSrcIdx = null;
+
+function onDragStart(e) {
+  dragSrcKey = e.currentTarget.dataset.key;
+  dragSrcIdx = parseInt(e.currentTarget.dataset.idx);
+  e.currentTarget.style.opacity = '0.4';
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  // ホバー行をハイライト
+  document.querySelectorAll('[data-key] tr, tr[data-key]').forEach(r => r.style.background = '');
+  e.currentTarget.style.background = '#e8f0fb';
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  const targetKey = e.currentTarget.dataset.key;
+  const targetIdx = parseInt(e.currentTarget.dataset.idx);
+  if (dragSrcKey !== targetKey || dragSrcIdx === targetIdx) return;
+  // 配列を並べ替え
+  const arr = master[dragSrcKey];
+  const item = arr.splice(dragSrcIdx, 1)[0];
+  arr.splice(targetIdx, 0, item);
+  saveMasterToStorage();
+  renderMasterTables();
+}
+
+function onDragEnd(e) {
+  e.currentTarget.style.opacity = '';
+  document.querySelectorAll('tr[data-key]').forEach(r => r.style.background = '');
+}
+function addMasterRow(key, defaultVal) {
+  master[key].push(defaultVal);
+  renderMasterTables();
+  saveMasterToStorage();
+}
+function applyMaster() {
+  saveMasterToStorage();
+  const list = document.getElementById('svc_list');
+  const count = list.children.length;
+  list.innerHTML = '';
+  for(let i=0;i<count;i++) addSvcRow();
+  renderStaffSelects();
+  alert('マスタを反映しました。');
+  switchTab('create');
+}
+function exportMaster() {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(master,null,2)],{type:'application/json'}));
+  a.download = 'recroco_master.json';
+  a.click();
+}
+function importMaster(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      master = JSON.parse(ev.target.result);
+      saveMasterToStorage();
+      renderMasterTables();
+      alert('マスタをインポートしました。「申込書作成に反映」を押してください。');
+    } catch { alert('読み込みに失敗しました。'); }
+  };
+  reader.readAsText(file);
+}
+</script>
+</body>
+</html>
