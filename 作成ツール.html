@@ -464,7 +464,7 @@ async function generateLink() {
   if (!GAS_URL) {
     // GAS_URL未設定の場合は従来通りURLエンコード方式
     const encoded = btoa(encodeURIComponent(JSON.stringify(d)));
-    const baseUrl = window.location.href.replace(/[^\/]*$/, '')+'顧客確認.html';
+    const baseUrl = 'https://tomo3cafe.github.io/RECROCO/%E9%A1%A7%E5%AE%A2%E7%A2%BA%E8%AA%8D.html';';
     const url = `${baseUrl}?d=${encoded}`;
     document.getElementById('generatedLink').value = url;
     document.getElementById('linkResult').classList.add('active');
