@@ -361,7 +361,7 @@ document.addEventListener('click', e => {
 function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
   document.getElementById('tab-'+tab).classList.add('active');
 }
 
@@ -450,22 +450,42 @@ function getFormData() {
   };
 }
 
-// GAS WebアプリURL（顧客確認.htmlと同じURLを設定）
-const GAS_URL = 'const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrcKueQQ7NvZ2L1QgXo9TdNimAnz0e-Q3WdMfXeyasR8RtzkyoIixG83dLym2bsgsM/exec';
-
-// 顧客確認ページのURL（GitHub Pages）
-const CUSTOMER_PAGE_URL = 'https://tomo3cafe.github.io/RECROCO/%E9%A1%A7%E5%AE%A2%E7%A2%BA%E8%AA%8D.html';
+// GAS WebアプリURL
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrcKueQQ7NvZ2L1QgXo9TdNimAnz0e-Q3WdMfXeyasR8RtzkyoIixG83dLym2bsgsM/exec';
 
 async function generateLink() {
   const d = getFormData();
   if (!d.app_date||!d.staff_name||!d.client_name) { alert('申込書作成日・営業担当・クライアント名を入力してください。'); return; }
   if (d.services.some(s=>s.price==='0')) { if (!confirm('金額が未入力のサービスがあります。このまま続けますか？')) return; }
 
-  const encoded = btoa(encodeURIComponent(JSON.stringify(d)));
-  const url = `${CUSTOMER_PAGE_URL}?d=${encoded}`;
-  document.getElementById('generatedLink').value = url;
-  document.getElementById('linkResult').classList.add('active');
-  document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
+  if (!GAS_URL) { alert('GAS_URLが設定されていません。'); return; }
+
+  const btn = document.querySelector('.btn-accent');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '⏳ 生成中...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({action:'save', data: d}),
+    });
+    const json = await res.json();
+    if (json.status === 'ok' && json.id) {
+      const url = `${GAS_URL}?id=${json.id}`;
+      document.getElementById('generatedLink').value = url;
+      document.getElementById('linkResult').classList.add('active');
+      document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
+    } else {
+      alert('リンク生成に失敗しました：' + (json.message||'不明なエラー'));
+    }
+  } catch(e) {
+    alert('通信エラーが発生しました。もう一度お試しください。');
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
 }
 
 function copyLink() {
