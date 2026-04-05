@@ -453,51 +453,19 @@ function getFormData() {
 // GAS WebアプリURL（顧客確認.htmlと同じURLを設定）
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrcKueQQ7NvZ2L1QgXo9TdNimAnz0e-Q3WdMfXeyasR8RtzkyoIixG83dLym2bsgsM/exec';  // 例: 'https://script.google.com/macros/s/XXXXXX/exec'
 
+// 顧客確認ページのURL（GitHub Pages）
+const CUSTOMER_PAGE_URL = 'https://tomo3cafe.github.io/RECROCO/%E9%A1%A7%E5%AE%A2%E7%A2%BA%E8%AA%8D.html';
+
 async function generateLink() {
   const d = getFormData();
   if (!d.app_date||!d.staff_name||!d.client_name) { alert('申込書作成日・営業担当・クライアント名を入力してください。'); return; }
   if (d.services.some(s=>s.price==='0')) { if (!confirm('金額が未入力のサービスがあります。このまま続けますか？')) return; }
 
-  const btn = document.querySelector('.btn-accent');
-  const originalText = btn.innerHTML;
-
-  if (!GAS_URL) {
-    // GAS_URL未設定の場合は従来通りURLエンコード方式
-    const encoded = btoa(encodeURIComponent(JSON.stringify(d)));
-    const baseUrl = 'https://tomo3cafe.github.io/RECROCO/%E9%A1%A7%E5%AE%A2%E7%A2%BA%E8%AA%8D.html';';
-    const url = `${baseUrl}?d=${encoded}`;
-    document.getElementById('generatedLink').value = url;
-    document.getElementById('linkResult').classList.add('active');
-    document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
-    return;
-  }
-
-  // GAS_URL設定済みの場合はGASにデータ保存→短縮ID取得
-  btn.innerHTML = '⏳ 生成中...';
-  btn.disabled = true;
-
-  try {
-    const res = await fetch(GAS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'save', data: d }),
-    });
-
-    // no-corsのためレスポンスは読めないが、GASは処理している
-    // IDはタイムスタンプベースで生成してURLに使う（フォールバック）
-    const timestamp = Date.now().toString(36).toUpperCase().slice(-6);
-    const baseUrl = window.location.href.replace(/[^\/]*$/, '')+'顧客確認.html';
-    const url = `${baseUrl}?d=${btoa(encodeURIComponent(JSON.stringify({...d, draft_id: timestamp})))}`;
-    document.getElementById('generatedLink').value = url;
-    document.getElementById('linkResult').classList.add('active');
-    document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
-  } catch(e) {
-    alert('リンク生成に失敗しました。もう一度お試しください。');
-  } finally {
-    btn.innerHTML = originalText;
-    btn.disabled = false;
-  }
+  const encoded = btoa(encodeURIComponent(JSON.stringify(d)));
+  const url = `${CUSTOMER_PAGE_URL}?d=${encoded}`;
+  document.getElementById('generatedLink').value = url;
+  document.getElementById('linkResult').classList.add('active');
+  document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
 function copyLink() {
