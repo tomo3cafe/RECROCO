@@ -148,7 +148,11 @@
           </div>
         </div>
         <div class="form-group"><label>紹介者 <span class="opt">任意</span></label><input type="text" id="referral_company" placeholder="例：株式会社〇〇"></div>
-        <div class="form-group full"><label>クライアント名 <span class="req">*</span></label><input type="text" id="client_name" placeholder="例：〇〇株式会社"></div>
+        <div class="form-group full" style="position:relative;">
+          <label>クライアント名 <span class="req">*</span></label>
+          <input type="text" id="client_name" placeholder="例：〇〇株式会社" oninput="searchPastClient(this.value)" autocomplete="off">
+          <div id="client_suggest" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid var(--accent);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.15);z-index:9999;max-height:280px;overflow-y:auto;margin-top:4px;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -452,6 +456,68 @@ function getFormData() {
 
 // GAS WebアプリURL
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrcKueQQ7NvZ2L1QgXo9TdNimAnz0e-Q3WdMfXeyasR8RtzkyoIixG83dLym2bsgsM/exec';
+
+// 過去申込検索・サジェスト
+let searchTimer = null;
+async function searchPastClient(val) {
+  const box = document.getElementById('client_suggest');
+  if (!val || val.length < 1) { box.style.display='none'; return; }
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(`${GAS_URL}?action=search&q=${encodeURIComponent(val)}`);
+      const json = await res.json();
+      if (!json.results || json.results.length === 0) { box.style.display='none'; return; }
+      box.innerHTML = json.results.map(r => `
+        <div onclick="applyPastOrder(${JSON.stringify(r).replace(/"/g,'&quot;')})"
+          style="padding:12px 16px;cursor:pointer;border-bottom:1px solid #f0ede8;transition:background .15s;"
+          onmouseover="this.style.background='#eaf0f8'" onmouseout="this.style.background=''">
+          <div style="font-weight:600;font-size:.9rem;color:var(--accent);">${r.client_name}</div>
+          <div style="font-size:.76rem;color:var(--muted);margin-top:2px;">
+            ${r.created_at ? r.created_at.toString().slice(0,10) : ''} ／ 
+            ${r.services.map(s=>s.service+'・'+s.plan).join('、')} ／ 
+            ¥${Number(r.total_ex).toLocaleString()}（税抜）
+          </div>
+        </div>
+      `).join('');
+      box.style.display='block';
+    } catch(e) { box.style.display='none'; }
+  }, 400);
+}
+
+// 過去申込を申込書に反映
+function applyPastOrder(r) {
+  // クライアント名を設定
+  document.getElementById('client_name').value = r.client_name;
+  document.getElementById('client_suggest').style.display = 'none';
+
+  if (!confirm(`「${r.client_name}」の過去の申込内容（${r.created_at ? r.created_at.toString().slice(0,10) : ''}）を申込書に反映しますか？\n\n※ サービス内容が上書きされます。`)) return;
+
+  // サービス内容を反映
+  const list = document.getElementById('svc_list');
+  list.innerHTML = '';
+  (r.services || []).forEach(s => {
+    addSvcRow();
+    const rows = list.querySelectorAll('.svc-row');
+    const row = rows[rows.length - 1];
+    row.querySelector('.svc-service').value = s.service || '';
+    row.querySelector('.svc-plan').value = s.plan || '';
+    row.querySelector('.svc-qty').value = s.qty || '1';
+    row.querySelector('.svc-period').value = s.period || '';
+    row.querySelector('.svc-price').value = s.price || '0';
+    if (row.querySelector('.svc-note')) row.querySelector('.svc-note').value = s.note || '';
+  });
+  calcTotal();
+  alert('過去の申込内容を反映しました。内容を確認・修正してください。');
+}
+
+// 画面クリックでサジェストを閉じる
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#client_suggest') && e.target.id !== 'client_name') {
+    const box = document.getElementById('client_suggest');
+    if (box) box.style.display = 'none';
+  }
+});
 
 async function generateLink() {
   const d = getFormData();
