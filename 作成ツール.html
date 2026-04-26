@@ -500,11 +500,13 @@ function applyPastOrder(r) {
     addSvcRow();
     const rows = list.querySelectorAll('.svc-row');
     const row = rows[rows.length - 1];
-    const setVal = (cls, val) => { const el = row.querySelector(cls); if(el) el.value = val || ''; };
+    const setVal = (cls, val) => {
+      const el = row.querySelector(cls);
+      if (el && val !== undefined && val !== null) el.value = val;
+    };
     setVal('.loc-service', s.service);
     setVal('.loc-plan', s.plan);
-    setVal('.loc-qty', s.qty || '1');
-    setVal('.loc-unit', s.unit);
+    setVal('.loc-qty', s.qty || s.period || '1');
     setVal('.loc-price', s.price);
     setVal('.loc-note', s.note);
   });
