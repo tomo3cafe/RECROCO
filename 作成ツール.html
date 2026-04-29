@@ -538,24 +538,26 @@ async function generateLink() {
   d.draft_id = id;
 
   try {
-    const res = await fetch(GAS_URL, {
+    // no-corsでGASにデータ保存（レスポンス読めないがGASは処理する）
+    fetch(GAS_URL, {
       method: 'POST',
+      mode: 'no-cors',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({action:'save', data: d, id: id}),
     });
-    const json = await res.json();
-    if (json.status === 'ok') {
-      const url = json.url || `${GAS_URL}?id=${json.id || id}`;
-      document.getElementById('generatedLink').value = url;
-      document.getElementById('linkResult').classList.add('active');
-      document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
-    } else {
-      // フォールバック：短縮失敗時は通常URL
-      const url = `${GAS_URL}?id=${id}`;
-      document.getElementById('generatedLink').value = url;
-      document.getElementById('linkResult').classList.add('active');
-      document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
-    }
+
+    // 少し待ってからGETでbitly短縮URLを取得
+    await new Promise(r => setTimeout(r, 2000));
+    let shortUrl = `${GAS_URL}?id=${id}`;
+    try {
+      const res = await fetch(`${GAS_URL}?action=get_short_url&id=${id}`);
+      const json = await res.json();
+      if (json.status === 'ok' && json.url) shortUrl = json.url;
+    } catch(e) {}
+
+    document.getElementById('generatedLink').value = shortUrl;
+    document.getElementById('linkResult').classList.add('active');
+    document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
   } catch(e) {
     alert('エラーが発生しました。もう一度お試しください。');
   } finally {
