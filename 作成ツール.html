@@ -534,24 +534,28 @@ async function generateLink() {
   btn.innerHTML = '⏳ 生成中...';
   btn.disabled = true;
 
-  try {
-    // タイムスタンプベースの短いIDを生成
-    const id = Date.now().toString(36).toUpperCase().slice(-6);
-    d.draft_id = id;
+  const id = Date.now().toString(36).toUpperCase().slice(-6);
+  d.draft_id = id;
 
-    // GASにデータを保存（no-corsで送信）
-    fetch(GAS_URL, {
+  try {
+    const res = await fetch(GAS_URL, {
       method: 'POST',
-      mode: 'no-cors',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({action:'save', data: d, id: id}),
     });
-
-    // 短いURLを生成
-    const url = `${GAS_URL}?id=${id}`;
-    document.getElementById('generatedLink').value = url;
-    document.getElementById('linkResult').classList.add('active');
-    document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
+    const json = await res.json();
+    if (json.status === 'ok') {
+      const url = json.url || `${GAS_URL}?id=${json.id || id}`;
+      document.getElementById('generatedLink').value = url;
+      document.getElementById('linkResult').classList.add('active');
+      document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
+    } else {
+      // フォールバック：短縮失敗時は通常URL
+      const url = `${GAS_URL}?id=${id}`;
+      document.getElementById('generatedLink').value = url;
+      document.getElementById('linkResult').classList.add('active');
+      document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
   } catch(e) {
     alert('エラーが発生しました。もう一度お試しください。');
   } finally {
