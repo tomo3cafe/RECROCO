@@ -538,23 +538,22 @@ async function generateLink() {
   d.draft_id = id;
 
   try {
-    // no-corsでGASにデータ保存
-    fetch(GAS_URL, {
+    // GASにデータ保存（text/plainでプリフライトを避け、応答を読む）
+    const res = await fetch(GAS_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type':'application/json'},
+      headers: {'Content-Type':'text/plain;charset=utf-8'},
       body: JSON.stringify({action:'save', data: d, id: id}),
     });
+    const json = await res.json();
+    if (json.status !== 'ok' || !json.url) throw new Error(json.message || '保存に失敗しました');
 
-    // TinyURL APIで短縮URL生成
-    const longUrl = `${GAS_URL}?id=${id}`;
-    let shortUrl = longUrl;
-    try {
-      const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
-      if (res.ok) shortUrl = await res.text();
-    } catch(e) {}
+    // GAS側で短縮したURLを表示
+    const url = json.url;
+    if (!/^https?:\/\/(tinyurl\.com|is\.gd)\//.test(url)) {
+      alert('短縮URLの生成に失敗したため、通常URLを表示します。');
+    }
 
-    document.getElementById('generatedLink').value = shortUrl;
+    document.getElementById('generatedLink').value = url;
     document.getElementById('linkResult').classList.add('active');
     document.getElementById('linkResult').scrollIntoView({behavior:'smooth',block:'nearest'});
   } catch(e) {
